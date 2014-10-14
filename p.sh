@@ -3,7 +3,7 @@
 #
 # Giovanni Cherubin <g.chers :at: gmail.com>
 
-configfile=./p.cfg
+configfile=~/.p/p.cfg
 
 ## Utils
 # Encrypt file $2 using identity $1. Output file is $3.

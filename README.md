@@ -96,6 +96,8 @@ Here's a quick overview of the *p* commands you may want to use:
 $ p
 # Add a new password
 $ p -a twitter
+# or, if the only label starting with 'tw'
+$ p -a tw
 # Show a stored password (insert GPG passphrase when prompted)
 $ p twitter
 # Remove a password
@@ -114,7 +116,9 @@ and thus the copy-to-clipboard *p* functionality. Well, there's a solution: [3].
 ## Temporary file
 This program is using for now a temporary file, `~/.p/store` as default.
 Now, an attacker with user permissions may do something like:
+```
 $ while [ 1 ]; do [[ -e "~/.p/store.gpg" ]] && cp test evil; done
+```
 which would allow him to get all the stored password in plaintext when the user
 decrypts the file. I'm not sure this is a great risk (the assumption of an
 attacker having user permission is dangerous itself), but I believe this can
