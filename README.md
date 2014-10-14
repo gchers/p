@@ -1,6 +1,3 @@
-%p, A password manager
-%Giovanni Cherubin
-
 #p, A password manager
 *p* is a very simple command line password manager. Its goal is to be an easy
 to read and mantain password manager, with some care to users security.
