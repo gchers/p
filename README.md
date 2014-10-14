@@ -1,6 +1,3 @@
-%p, A password manager
-%Giovanni Cherubin
-
 #p, A password manager
 *p* is a very simple command line password manager. Its goal is to be an easy
 to read and mantain password manager, with some care to users security.
@@ -34,7 +31,7 @@ a so that potentially anyone who understands a bit *bash* can check it does
 what it says before using it.
 
 _NOTE: this is still a beta version, use it if you want to test it, but keep
-your passwords also stored somewhere else, just in case..._
+your passwords also stored somewhere else._
 
 #Requirements
 *p* is a bash script. It can be potentially used on every system supporting
