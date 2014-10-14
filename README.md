@@ -31,7 +31,7 @@ a so that potentially anyone who understands a bit *bash* can check it does
 what it says before using it.
 
 _NOTE: this is still a beta version, use it if you want to test it, but keep
-your passwords also stored somewhere else, just in case..._
+your passwords also stored somewhere else._
 
 #Requirements
 *p* is a bash script. It can be potentially used on every system supporting
