@@ -31,7 +31,8 @@ a so that potentially anyone who understands a bit *bash* can check it does
 what it says before using it.
 
 _NOTE: this is still a beta version, use it if you want to test it, but keep
-your passwords also stored somewhere else._
+your passwords also stored somewhere else. I will remove this as soon as a few
+more people test and review it._
 
 #Requirements
 *p* is a bash script. It can be potentially used on every system supporting
@@ -110,6 +111,9 @@ $ p -l
 If you're an OSX user using tmux, you will probably not be able to use *pbcopy*,
 and thus the copy-to-clipboard *p* functionality. Well, there's a solution: [3].
 
+# Attack scenarios
+I will produce a more structured threat model. For now I propose three attacks, which both require user access to the system. I can not think of other attacks, but feel free to add some.
+
 ## Temporary file
 This program is using for now a temporary file, `~/.p/store` as default.
 Now, an attacker with user permissions may do something like:
@@ -119,8 +123,18 @@ $ while [ 1 ]; do [[ -e "~/.p/store.gpg" ]] && cp test evil; done
 which would allow him to get all the stored password in plaintext when the user
 decrypts the file. I'm not sure this is a great risk (the assumption of an
 attacker having user permission is dangerous itself), but I believe this can
-be solved by only using pipes within *p* code (no temporary file). I'm not sure
-about this either:)
+be solved by only using pipes within *p* code (no temporary file).
+
+## Clipboard repeated pasting
+A user-level malicous program may keep pasting from the clipboard, until the
+user will eventually retrieve a password, which will be leaked.
+
+## Shoulder surfing + private key
+By shoulder surfing, an attacker may only discover the private key password.
+This is also a reason to create a new key for *p*.
+Only knowing this password is not enough for the attacker, who can although
+retrieve all the passwords in `~/.p/store` if he has also access to the
+private key.
 
 
 # References
