@@ -112,10 +112,10 @@ If you're an OSX user using tmux, you will probably not be able to use *pbcopy*,
 and thus the copy-to-clipboard *p* functionality. Well, there's a solution: [3].
 
 # Attack scenarios
-I will produce a more structured threat model. For now I propose three attacks, which both require user access to the system. I can not think of other attacks, but feel free to add some.
+I will produce a more structured threat model. For now I propose three attacks, which all require user access to the system. I can not think of other attacks, but feel free to add some.
 
 ## Temporary file
-This program is using for now a temporary file, `~/.p/store` as default.
+This program is using for now a temporary file (`~/.p/store` as default).
 Now, an attacker with user permissions may do something like:
 ```
 $ while [ 1 ]; do [[ -e "~/.p/store.gpg" ]] && cp test evil; done
