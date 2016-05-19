@@ -71,7 +71,7 @@ function show_help()
 function get_pw()
 {
     # Decrypt $STORE_ENC and get the first row with matching label
-    array=($(p_decrypt $STORE_ENC | grep -i $1 | head -n1; \
+    array=($(p_decrypt $STORE_ENC | grep -e "^$1" | head -n1; \
             exit ${PIPESTATUS[0]}))
     # Exit on decryption fail or if label not found
     [[ $? != 0 ]] && error 'decryption failed'
@@ -117,7 +117,7 @@ function add_pw()
 
 function mod_pw()
 {
-    p_decrypt $STORE_ENC | grep -v $1 > $STORE_PLAIN
+    p_decrypt $STORE_ENC | grep -v -e "^$1" > $STORE_PLAIN
     status=(${PIPESTATUS[@]})
     # Exit on decryption fail or if label not found
     [[ ${status[0]} != 0 ]] && rm -f $STORE_PLAIN && \
@@ -137,7 +137,7 @@ function mod_pw()
 function rm_pw()
 {
     # Decrypt and remove entry with label $1
-    p_decrypt $STORE_ENC | grep -v $1 > $STORE_PLAIN
+    p_decrypt $STORE_ENC | grep -v -e "^$1" > $STORE_PLAIN
     # Exit on decryption fail
     [[ ${PIPESTATUS[0]} != 0 ]] && rm -f $STORE_PLAIN && \
         error "decryption failed"
