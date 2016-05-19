@@ -75,12 +75,13 @@ function get_pw()
             exit ${PIPESTATUS[0]}))
     # Exit on decryption fail or if label not found
     [[ $? != 0 ]] && error 'decryption failed'
+    label=${array[0]}
     passw=${array[1]}
     date=${array[2]}
     [[ $passw ]] || error "label \"$1\" not found"
     # Copy to clipboard
     echo -n $passw | $CMD_COPY
-    msg "this password was created $(elapsed_days $date) days ago"
+    msg "the password for \"$label\" was created $(elapsed_days $date) days ago"
     msg "password copied to clipboard"
 }
 
