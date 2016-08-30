@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # p, a password manager
 #
 # Giovanni Cherubin <g.chers :at: gmail.com>
