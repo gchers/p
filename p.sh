@@ -96,8 +96,8 @@ function add_pw()
     fi
     echo -n "password (empty to generate one): "
     read passw
-    [[ $passw ]] || passw=$(gen_password); echo -n $passw | $CMD_COPY && \
-        msg "password copied to clipboard"
+    [ -z "$passw" ] && passw=$(gen_password)
+    [ -z "$passw" ] && error "failed to generate a password"
     # If $STORE_ENC exists decrypt it, else create it
     if [ -f $STORE_ENC ]
     then
@@ -114,6 +114,8 @@ function add_pw()
     [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "encryption failed"
     rm $STORE_PLAIN
     msg "password added"
+    echo -n $passw | $CMD_COPY
+    msg "password copied to clipboard"
 }
 
 function mod_pw()
@@ -125,14 +127,17 @@ function mod_pw()
         error "decryption failed"
     echo -n "new password (empty to generate one): "
     read passw
-    [[ $passw ]] || passw=$(gen_password); echo -n $passw | $CMD_COPY && \
-        msg "password copied to clipboard"
+    [ -z "$passw" ] && passw=$(gen_password)
+    [ -z "$passw" ] && error "failed to generate a password"
     # Store in format: label | password | date
     echo "$1 $passw $(date '+%s')" >> $STORE_PLAIN
     p_encrypt $GPG_ID $STORE_PLAIN $STORE_ENC
     # Exit on encryption fail
     [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "encryption failed"
     rm $STORE_PLAIN
+    msg "password modified"
+    echo -n $passw | $CMD_COPY
+    msg "password copied to clipboard"
 }
 
 function rm_pw()
