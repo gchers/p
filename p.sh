@@ -89,6 +89,7 @@ function get_pw()
 
 function add_pw()
 {
+    label=$1
     # Read/generate new password
     echo -n "password (empty to generate one): "
     read passw
