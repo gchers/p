@@ -41,7 +41,9 @@ function elapsed_days()
 # Generates a new password.
 function gen_password()
 {
-    passw=$(head /dev/random | md5)
+    # Generate a password of $n characters.
+    n=32
+    passw=$(head /dev/random | tr -dc A-Za-z0-9 | cut -c -$n)
     echo -n $passw
 }
 
