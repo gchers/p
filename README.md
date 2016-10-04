@@ -63,6 +63,7 @@ gpg --gen-key
 ```
 protected by a password. This password will be asked every time you need to
 read data from the storage file.
+Take note of the key id, which is in the form 0x00AABB... .
 
 #Configuration
 Default configuration `~/.p/p.cfg` should be now present.
@@ -75,8 +76,8 @@ A more complete list of these programs was given in [2].
 This variable is set, by default, to *pbcopy*.
 
 ###GPG\_ID
-The identity to set for this variable must be a prefix of the new created
-identity. In the suggested case it should be 'pmanager'.
+The identity to set for this variable should be the id of the GPG
+key you created before.
 
 ###STORE\_ENC
 This is the local file in which the encrypted data will be put. The default is
