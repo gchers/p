@@ -87,13 +87,7 @@ function get_pw()
 
 function add_pw()
 {
-    # Read label (if needed) and read/generate new password
-    label=$1
-    if [ -z $label ]
-    then
-        echo -n "label: "
-        read label
-    fi
+    # Read/generate new password
     echo -n "password (empty to generate one): "
     read passw
     [ -z "$passw" ] && passw=$(gen_password)
