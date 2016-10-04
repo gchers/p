@@ -167,8 +167,26 @@ function print_labels()
     rm -f $STORE_PLAIN
 }
 
+function init_utils() {
+    # If CMD_COPY is unset, try to figure out which command we should
+    # use for pasting to clipboard.
+    if [ -z "$CMD_COPY" ]
+    then
+        if xclip -version > /dev/null 2>&1
+        then
+            COPY_CMD="xclip -i -selection clipboard"
+        elif pbcopy -help > /dev/null 2>&1
+        then
+            COPY_CMD="pbcopy"
+        else
+            error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy (OS X). Either install one, or set CMD_COPY in the configuration file."
+        fi
+    fi
+}
+
 ## Main
 source $configfile
+init_utils
 
 while getopts "a:m:r:hl" opt
 do
