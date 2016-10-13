@@ -43,7 +43,7 @@ function gen_password()
 {
     # Generate a password of $n characters.
     n=32
-    passw=$(head /dev/random | tr -dc A-Za-z0-9 | cut -c -$n)
+    passw=$(head /dev/random | LC_CTYPE=C tr -dc A-Za-z0-9 | cut -c -$n)
     echo -n $passw
 }
 
