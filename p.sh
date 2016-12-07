@@ -34,7 +34,7 @@ function error()
 # Returns the days since file $1 was last modified
 function file_age()
 {
-    #[ -z "$1" ] && error "input error to file_age()"
+    [ -z "$1" ] && error "input error to file_age()"
     # Last edit date
     m_date=$(stat -f "%m" -t "+%s" "$1")
     [[ $? != 0 ]] && error "file $1 not found"
@@ -105,6 +105,8 @@ function show_help()
 # Checks if password with label $1 exists
 function label_exists()
 {
+    valid_label $1 || error "invalid label"
+
     if [[ -f "$STORE/$1" ]]
     then
         return 0
@@ -133,12 +135,9 @@ function get_pw()
     msg "password copied to clipboard"
 }
 
-# Create and store a password with label $1
-function add_pw()
+# Create/edit password with label $1
+function edit_pw()
 {
-    label=$1
-    valid_label $label || error "invalid label"
-    label_exists $label && error "label exists"
     # Read/generate new password
     echo -n "password (empty to generate one): "
     read passw
@@ -153,29 +152,9 @@ function add_pw()
     msg "password copied to clipboard"
 }
 
-# Modify password with label $1
-function mod_pw()
-{
-    valid_label $1 || error "invalid label"
-    label_exists $1 || error "label $1 not found"
-    # Read/generate new password
-    echo -n "password (empty to generate one): "
-    read passw
-    [ -z "$passw" ] && passw=$(gen_password)
-    [ -z "$passw" ] && error "failed to generate a password"
-    # Store password
-    outfile="$STORE/$1"
-    p_encrypt "$GPG_ID" "$passw" "$outfile"
-    [[ $? != 0 ]] && error "encryption failed"
-    msg "password modified"
-    echo -n "$passw" | $CMD_COPY
-    msg "password copied to clipboard"
-}
-
 # Remove password with label $1
 function rm_pw()
 {
-    valid_label $1 || error "invalid label"
     label_exists $1 || error "label $1 not found"
     proceed_abort "do you want to remove label $OPTARG?" || error "aborted"
     rm "$STORE/$1"
@@ -190,6 +169,7 @@ function print_labels()
     for fname in "$STORE/$1"*
     do
         label=$(basename $fname)
+        days=$(file_age $fname)
         echo -e "$label\t$days"
     done
 }
@@ -222,11 +202,13 @@ while getopts "a:m:r:hl" opt
 do
     case "$opt" in
     a)
-        add_pw $OPTARG
+        label_exists $OPTARG && error "label exists"
+        edit_pw $OPTARG
         exit 0
         ;;
     m)
-        mod_pw $OPTARG
+        label_exists $OPTARG || error "label not found"
+        edit_pw $OPTARG
         exit 0
         ;;
     r)
