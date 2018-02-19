@@ -129,7 +129,7 @@ function get_pw()
     passw="$(p_decrypt $encfile)"
     [[ $? != 0 ]] && error 'decryption failed'
     # Copy to clipboard
-    echo -n $passw | $CMD_COPY
+    echo -n $passw | eval "$CMD_COPY"
     days=$(file_age $encfile)
     msg "the password for \"$label\" was created $days days ago"
     msg "password copied to clipboard"
@@ -148,7 +148,7 @@ function edit_pw()
     p_encrypt "$GPG_ID" "$passw" "$outfile"
     [[ $? != 0 ]] && error "encryption failed"
     msg "password added"
-    echo -n "$passw" | $CMD_COPY
+    echo -n "$passw" | eval "$CMD_COPY"
     msg "password copied to clipboard"
 }
 
@@ -184,10 +184,10 @@ function init() {
     then
         if xclip -version > /dev/null 2>&1
         then
-            COPY_CMD="xclip -i -selection clipboard"
+            CMD_COPY="xclip -i -sel p -f | xclip -i -sel c"
         elif pbcopy -help > /dev/null 2>&1
         then
-            COPY_CMD="pbcopy"
+            CMD_COPY="pbcopy"
         else
             error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy (OS X). Set CMD_COPY in the configuration file."
         fi
