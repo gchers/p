@@ -1,17 +1,35 @@
-#p, A password manager
-*p* is a very simple command line password manager. Its goal is to be an easy
-to read and mantain password manager, with some care to users security.
-Passwords are all stored by *p* in a local file, which is encrypted
-by using GnuPG public key encryption. A _master password_, the GnuPG private
-key password, ensures that an attacker, managing to have access to the
-encrypted storage and to the private key, cannot immediately obtain all the
-passwords.
-A weak _master password_ although will not ensure he won't be able to get
-them at some point.
+# p, A password manager
+
+*p* is a very simple command line password manager, based on GnuPG.
+Its effective code is <200 lines of bash, making it easy to
+read and maintain.
+
+Here's a quick overview of the main commands.
+```
+# Show help
+$ p
+# Add a new password
+$ p -a twitter
+# Copy a password to the clipboard
+$ p twitter
+# Remove a password
+$ p -r twitter
+# Modify a password
+$ p -m twitter
+# List labels and their passwords age
+$ p -l
+```
+
+# How it works
+
 Every password is associated to a label, which should represent the service
 the password is used on (e.g.: 'twitter', 'freenode', ...).
-When asked for a password, *p* copies it to the user clipboard in
-order to prevent shoulder surfing.
+Each password is stored in a separate GnuPG-encrypted file under the directory `$STORE`.
+The GnuPG _master password_ is used to decrypt a password.
+
+When `p some_label` is called, the password corresponding to `some_label`
+is copied to the clipboard.
+
 *p* is easily scriptable. For example, a user may want to periodically
 check that there are no passwords older than 3 months. This can be achieved by
 using Unix cron, and performing a test on the output of:
@@ -19,6 +37,9 @@ using Unix cron, and performing a test on the output of:
 $ p -l
 ```
 which returns a list of the labels, together with their age in days.
+NOTE however that this function is beta; in fact, it works by looking at
+the storage files' timestamp, which can be misleading if you sync passwords
+with other computers.
 
 *p* does not guarantee that an attacker controlling your computer will not be
 able to get all your passwords: a simple keylogger used while you type the
@@ -30,34 +51,20 @@ them...
 a so that potentially anyone who understands a bit *bash* can check it does
 what it says before using it.
 
-_NOTE: this is still a beta version, use it if you want to test it, but keep
-your passwords also stored somewhere else. I will remove this as soon as a few
-more people test and review it._
+_NOTE: I've been using *p* on my laptops for many years now, and never
+encountered any problem.
+However, until more people test it, I will consider this a beta version.
+Use it at your own risk._
 
-#Requirements
-*p* is a bash script. It can be potentially used on every system supporting
-bash. The system should also have a copy-to-clipboard utility, as explained
-later, and GnuPG [1] installed. Also 'awk' and other common \*nix utilities
-should be present on the system.
+# Installation
 
-#Installation
-After satisfying the requirements, the script `p.sh` can be put in any
-directory, and linked to an executable path, by doing for example:
-```
-# ln -s /full/path/to/p.sh /usr/local/bin/p
-```
-and then called by
-```
-$ p
-```
-Before this, please create a directory for the configuration file `p.cfg` and
-put it there. We recommend:
-```
-$ mkdir ~/.p/
-$ cp p.cfg ~/.p/
-```
-else you'll have to change something in the configuration.
-We suggest to create a new GPG identity called 'pmanager', by:
+*p* requires: `bash`, standard \*nix utilities (e.g., `awk`), GnuPG [1].
+Also, it should have a copy-to-clipboard utility (`xclip` for \*NIX,
+`pbcopy` for MacOS).
+
+It was tested on recent: MacOS, OpenBSD, FreeBSD, some Linux distros.
+
+To install, you need to first create a new GnuPG identity:
 ```
 gpg --gen-key
 ```
@@ -65,80 +72,73 @@ protected by a password. This password will be asked every time you need to
 read data from the storage file.
 Take note of the key id, which is in the form 0x00AABB... .
 
-#Configuration
-Default configuration `~/.p/p.cfg` should be now present.
-A few variables from it must be checked before execution:
-
-###CMD\_COPY
-Must be the command line program to copy to clipboard (e.g.: *pbcopy* in OSX,
-*xclip* under *X*, *gpm* for Linux in terminal mode).
-A more complete list of these programs was given in [2].
-This variable is set, by default, to *pbcopy*.
-
-###GPG\_ID
-The identity to set for this variable should be the id of the GPG
-key you created before.
-
-###STORE\_ENC
-This is the local file in which the encrypted data will be put. The default is
-`~/.p/store.gpg`, and it can be left as it is.
-
-###STORE\_PLAIN
-This is the local temporary file in which the plain text data will be put. The
-default is `~/.p/store`, and it can be left as it is.
-
-# Quick run
-
-Here's a quick overview of the *p* commands you may want to use:
+Then:
 ```
-# Show help
+$ git clone https://github.com/gchers/p
+$ cd p
+$ mkdir ~/.p                              # Where password files will be.
+$ mkdir -p ~/.config/p/                   # Where to put the config file.
+$ cp p.cfg ~/.config/p/config
+$ chmod +x p.sh
+$ # As root:
+# ln -s $PWD/p.sh /usr/local/bin/p        # Or anywhere on your $PATH.
+```
+
+Finally, edit `~/.config/p/config` and set `GPG_ID` to the
+key id of the GnuPG identity you created.
+
+Try it works by calling:
+```
 $ p
-# Add a new password
-$ p -a twitter
-# or, if the only label starting with 'tw'
-$ p -a tw
-# Show a stored password (insert GPG passphrase when prompted)
-$ p twitter
-# Remove a password
-$ p -r twitter
-# Modify a password
-$ p -m twitter
-# List labels and their passwords age
-$ p -l
 ```
+
+# Further configuration
+
+*p* shouldn't need any more tweaks. You may however want
+to check the following settings in `~/.config/p/config`.
+
+## CMD\_COPY
+
+This specifies the command used to copy to clipboard.
+It should be automatically detected.
+A list of such programs is in [2].
+
+## GPG\_ID
+
+The id of the GPG key used to encrypt/decrypt the passwords.
+
+## STORE
+
+The directory under which password files are stored.
+It defaults to `~/.p`.
 
 # Issues
+
 ## Using OSX, tmux and pbcopy
 If you're an OSX user using tmux, you will probably not be able to use *pbcopy*,
-and thus the copy-to-clipboard *p* functionality. Well, there's a solution: [3].
+and thus the copy-to-clipboard functionality. Well, there's a solution: [3].
 
 # Attack scenarios
-I will produce a more structured threat model. For now I propose three attacks, which all require user access to the system. I can not think of other attacks, but feel free to add some.
 
-## Temporary file
-This program is using for now a temporary file (`~/.p/store` as default).
-Now, an attacker with user permissions may do something like:
-```
-$ while [ 1 ]; do [[ -e "~/.p/store.gpg" ]] && cp test evil; done
-```
-which would allow him to get all the stored password in plaintext when the user
-decrypts the file. I'm not sure this is a great risk (the assumption of an
-attacker having user permission is dangerous itself), but I believe this can
-be solved by only using pipes within *p* code (no temporary file).
+*p* cannot prevent the following kind of attacks. Both of them require
+an adversary to get access to the machine.
+
+If you find a bug, please open a ticket.
 
 ## Clipboard repeated pasting
+
 A user-level malicous program may keep pasting from the clipboard, until the
 user will eventually retrieve a password, which will be leaked.
 
 ## Shoulder surfing + private key
-By shoulder surfing, an attacker may only discover the private key password.
-This is also a reason to create a new key for *p*.
-Only knowing this password is not enough for the attacker, who can although
-retrieve all the passwords in `~/.p/store` if he has also access to the
-private key.
+
+By shoulder surfing, an attacker may only discover the password of the
+GnuPG key. In order to find all the user's password, he would also need
+to steal the actual private key, by getting access to the machine.
 
 
 # References
+
 [1] <https://www.gnupg.org/>
 
 [2] <http://stackoverflow.com/a/750466/1230980>
