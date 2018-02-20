@@ -58,8 +58,8 @@ Use it at your own risk._
 
 # Installation
 
-*p* requires: `bash`, standard \*nix utilities (e.g., `awk`), GnuPG [1].
-Also, it should have a copy-to-clipboard utility (`xclip` for \*NIX,
+*p* requires: `bash`, standard \*nix utilities (e.g., `awk`), and GnuPG [1].
+Also, it needs a copy-to-clipboard utility (`xclip` for \*NIX,
 `pbcopy` for MacOS).
 
 It was tested on recent: MacOS, OpenBSD, FreeBSD, some Linux distros.
