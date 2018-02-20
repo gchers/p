@@ -70,15 +70,20 @@ gpg --gen-key
 ```
 protected by a password. This password will be asked every time you need to
 read data from the storage file.
-Take note of the key id, which is in the form 0x00AABB... .
+When asked for `Real name` and `Email address` you can put something like
+`password-manager`.
+Take note of the key id, which is some hex string (e.g.,
+5CE3CEA98C3746A8CDFBD8C6E68DAE58DFA511FE).
 
 Then:
 ```
+$ mkdir -p ~/.local/src                   # Or where you like to leave the script.
+$ cd ~/.local/src
 $ git clone https://github.com/gchers/p
 $ cd p
 $ mkdir ~/.p                              # Where password files will be.
 $ mkdir -p ~/.config/p/                   # Where to put the config file.
-$ cp p.cfg ~/.config/p/config
+$ cp p.conf ~/.config/p/config
 $ chmod +x p.sh
 $ # As root:
 # ln -s $PWD/p.sh /usr/local/bin/p        # Or anywhere on your $PATH.
@@ -91,6 +96,9 @@ Try it works by calling:
 ```
 $ p
 ```
+
+If the program complains you don't have a copy-to-clipboard utility, please
+install one (`xclip` on \*NIX, `pbcopy` should already be in MacOS).
 
 # Further configuration
 
