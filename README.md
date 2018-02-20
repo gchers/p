@@ -121,7 +121,7 @@ and thus the copy-to-clipboard functionality. Well, there's a solution: [3].
 # Attack scenarios
 
 *p* cannot prevent the following kind of attacks. Both of them require
-an adversary to get access to the machine.
+an adversary to *already have access* to the machine.
 
 If you find a bug, please open a ticket.
 
