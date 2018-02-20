@@ -25,7 +25,7 @@ $ p -l
 Every password is associated to a label, which should represent the service
 the password is used on (e.g.: 'twitter', 'freenode', ...).
 Each password is stored in a separate GnuPG-encrypted file under the directory `$STORE`.
-The GnuPG _master password_ is used to decrypt a password.
+The GnuPG key's _master password_ is used to decrypt password files.
 
 When `p some_label` is called, the password corresponding to `some_label`
 is copied to the clipboard.
@@ -52,8 +52,8 @@ a so that potentially anyone who understands a bit *bash* can check it does
 what it says before using it.
 
 _NOTE: I've been using *p* on my laptops for many years now, and never
-encountered any problem.
-However, until more people test it, I will consider this a beta version.
+encountered any (critical) problem.
+However, until more people test it, I will consider this as a beta version.
 Use it at your own risk._
 
 # Installation
