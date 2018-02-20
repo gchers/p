@@ -189,7 +189,9 @@ function init() {
         then
             CMD_COPY="pbcopy"
         else
-            error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy (OS X). Set CMD_COPY in the configuration file."
+            error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy \
+                  (OS X). Install one of them, or set CMD_COPY in the \
+                  configuration file to a custom copy-to-clipboard tool."
         fi
     fi
 }
