@@ -3,19 +3,19 @@
 #
 # Giovanni Cherubin <g.chers :at: gmail.com>
 
-configfile=~/.p/p.cfg
+configfile=~/.config/p/config
 
 ## Utils
-# Encrypt file $2 using identity $1. Output file is $3.
+# Encrypt text $2 using identity $1. Output file is $3.
 function p_encrypt()
 {
-    gpg -e -r $1 --yes --output $3 $2
+    echo -n "$2" | $GPG -er $1 --yes --output $3
 }
 
 # Decrypt file $1.
 function p_decrypt()
 {
-    gpg -d $1
+    $GPG -d "$1"
 }
 
 # Prompt message.
@@ -27,30 +27,62 @@ function msg()
 # Prompt error message and exit with status 1.
 function error()
 {
-    echo "[!] $1"
+    (>&2 echo "[!] $1")
     exit 1
 }
 
-# Return elapsed days from $1 (date in format %s) to today.
-function elapsed_days()
+# Returns the days since file $1 was last modified
+function file_age()
 {
-    let days=($(date "+%s")-$1)/86400
+    [ -z "$1" ] && error "input error to file_age()"
+    # Last edit date
+    m_date=$(stat -f "%m" -t "+%s" "$1")
+    [[ $? != 0 ]] && error "file $1 not found"
+    # Compute days
+    let days=($(date "+%s")-$m_date)/86400
     echo $days
 }
 
-# Generates a new password.
+# Generate a new password of 32 characters
 function gen_password()
 {
-    # Generate a password of $n characters.
     n=32
+    # Generate a password of $n characters.
     passw=$(head /dev/random | LC_CTYPE=C tr -dc A-Za-z0-9 | cut -c -$n)
     echo -n $passw
 }
 
+# Prompts $1 and waits for y|Y (proceed) or any
+# other key (abort)
+function proceed_abort() {
+    echo -n "$1 [y/n] "
+    read ans
+    case "$ans" in
+        y|Y)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Checks if $1 is a valid label (alphanumeric)
+function valid_label()
+{
+    if ! [[ $1 =~ [^a-zA-Z0-9]+ ]]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
 ## Functions
 function show_help()
 {
-    echo "usage: $0 [option [argument]]/[argument]
+    echo "usage: $0 <option> [option's argument]
 
     \`p' is an \"as simple as I could\" command line password manager.
     Passwords are stored in a GPG encrypted file, store.gpg,
@@ -70,135 +102,113 @@ function show_help()
             simply running \"$0 argument\", where argument is the label."
 }
 
+# Checks if password with label $1 exists
+function label_exists()
+{
+    valid_label $1 || error "invalid label"
+
+    if [[ -f "$STORE/$1" ]]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Copy password with label starting with $1 to the clipboard
 function get_pw()
 {
-    # Decrypt $STORE_ENC and get the first row with matching label
-    array=($(p_decrypt $STORE_ENC | grep -e "^$1" | head -n1; \
-            exit ${PIPESTATUS[0]}))
-    # Exit on decryption fail or if label not found
+    valid_label $1 || error "invalid label"
+    # Determine first matching label
+    labels=$(find "$STORE/$1"* -type f -maxdepth 1 2> /dev/null | head -n1)
+    [[ -z $labels ]] && error "password with label $1 not found"
+    label="$(basename $labels)"
+    #[[ -z $label ]] && error "password with label $1 not found"
+    # Decrypt
+    encfile="$STORE/$label"
+    passw="$(p_decrypt $encfile)"
     [[ $? != 0 ]] && error 'decryption failed'
-    label=${array[0]}
-    passw=${array[1]}
-    date=${array[2]}
-    [[ $passw ]] || error "label \"$1\" not found"
     # Copy to clipboard
-    echo -n $passw | $CMD_COPY
-    msg "the password for \"$label\" was created $(elapsed_days $date) days ago"
+    echo -n $passw | eval "$CMD_COPY"
+    days=$(file_age $encfile)
+    msg "the password for \"$label\" was created $days days ago"
     msg "password copied to clipboard"
 }
 
-function add_pw()
+# Create/edit password with label $1
+function edit_pw()
 {
-    label=$1
     # Read/generate new password
     echo -n "password (empty to generate one): "
     read passw
     [ -z "$passw" ] && passw=$(gen_password)
     [ -z "$passw" ] && error "failed to generate a password"
-    # If $STORE_ENC exists decrypt it, else create it
-    if [ -f $STORE_ENC ]
-    then
-        p_decrypt $STORE_ENC > $STORE_PLAIN
-        # Exit on decryption fail
-        [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "decryption failed"
-    else
-        touch $STORE_PLAIN
-    fi
-    # Store in format: label | password | date
-    echo "$label $passw $(date '+%s')" >> $STORE_PLAIN
-    p_encrypt $GPG_ID $STORE_PLAIN $STORE_ENC
-    # Exit on encryption fail
-    [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "encryption failed"
-    rm $STORE_PLAIN
+    # Store password
+    outfile="$STORE/$1"
+    p_encrypt "$GPG_ID" "$passw" "$outfile"
+    [[ $? != 0 ]] && error "encryption failed"
     msg "password added"
-    echo -n $passw | $CMD_COPY
+    echo -n "$passw" | eval "$CMD_COPY"
     msg "password copied to clipboard"
 }
 
-function mod_pw()
-{
-    p_decrypt $STORE_ENC | grep -v -e "^$1" > $STORE_PLAIN
-    status=(${PIPESTATUS[@]})
-    # Exit on decryption fail or if label not found
-    [[ ${status[0]} != 0 ]] && rm -f $STORE_PLAIN && \
-        error "decryption failed"
-    echo -n "new password (empty to generate one): "
-    read passw
-    [ -z "$passw" ] && passw=$(gen_password)
-    [ -z "$passw" ] && error "failed to generate a password"
-    # Store in format: label | password | date
-    echo "$1 $passw $(date '+%s')" >> $STORE_PLAIN
-    p_encrypt $GPG_ID $STORE_PLAIN $STORE_ENC
-    # Exit on encryption fail
-    [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "encryption failed"
-    rm $STORE_PLAIN
-    msg "password modified"
-    echo -n $passw | $CMD_COPY
-    msg "password copied to clipboard"
-}
-
+# Remove password with label $1
 function rm_pw()
 {
-    # Decrypt and remove entry with label $1
-    p_decrypt $STORE_ENC | grep -v -e "^$1" > $STORE_PLAIN
-    # Exit on decryption fail
-    [[ ${PIPESTATUS[0]} != 0 ]] && rm -f $STORE_PLAIN && \
-        error "decryption failed"
-    p_encrypt $GPG_ID $STORE_PLAIN $STORE_ENC
-    # Exit on encryption fail
-    [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "encryption failed"
-    rm $STORE_PLAIN
+    label_exists $1 || error "label $1 not found"
+    proceed_abort "do you want to remove label $OPTARG?" || error "aborted"
+    rm "$STORE/$1"
     msg "password removed"
 }
 
+# Print labels (optionally matching "$1")
 function print_labels()
 {
-    p_decrypt $STORE_ENC > $STORE_PLAIN
-    # Exit on decryption fail
-    [[ $? != 0 ]] && rm -f $STORE_PLAIN && error "decryption failed"
-    # Print in the form: label | age, where age is calculated for every
-    # entry of 3rd column with elapsed_days()
     echo -e "label\tage"
     echo "--------------"
-    cat $STORE_PLAIN | \
-    while read l
+    for fname in "$STORE/$1"*
     do
-        IFS=" " read -a array <<< "$l"
-        echo -e "${array[0]}\t$(elapsed_days ${array[2]})"
+        label=$(basename $fname)
+        days=$(file_age $fname)
+        echo -e "$label\t$days"
     done
-    rm -f $STORE_PLAIN
 }
 
-function init_utils() {
+function init() {
+    # Make $STORE dir if it doesn't exist
+    [ -d $STORE ] || mkdir -p $STORE
+    [[ $? != 0 ]] && error "failed to create directory $STORE"
     # If CMD_COPY is unset, try to figure out which command we should
     # use for pasting to clipboard.
     if [ -z "$CMD_COPY" ]
     then
         if xclip -version > /dev/null 2>&1
         then
-            COPY_CMD="xclip -i -selection clipboard"
+            CMD_COPY="xclip -i -sel p -f | xclip -i -sel c"
         elif pbcopy -help > /dev/null 2>&1
         then
-            COPY_CMD="pbcopy"
+            CMD_COPY="pbcopy"
         else
-            error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy (OS X). Either install one, or set CMD_COPY in the configuration file."
+            error "I couldn't find neither xclip (Linux&*BSD) nor pbcopy (OS X). Set CMD_COPY in the configuration file."
         fi
     fi
 }
 
 ## Main
 source $configfile
-init_utils
+init
 
 while getopts "a:m:r:hl" opt
 do
     case "$opt" in
     a)
-        add_pw $OPTARG
+        label_exists $OPTARG && error "label exists"
+        edit_pw $OPTARG
         exit 0
         ;;
     m)
-        mod_pw $OPTARG
+        label_exists $OPTARG || error "label not found"
+        edit_pw $OPTARG
         exit 0
         ;;
     r)
