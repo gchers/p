@@ -10,18 +10,19 @@ read and maintain.
 
 Here's a quick overview of the main commands.
 ```
-# Show help
+# Show help.
 $ p
-# Add a new password
+# Add a new password (this already copies the password to the clipboard).
+# It optionally generates a password randomly.
 $ p -a twitter
-# Copy a password to the clipboard
+# Copy a password to the clipboard.
 $ p twitter
-# Remove a password
-$ p -r twitter
-# Modify a password
-$ p -m twitter
-# List labels and their passwords age
+# List labels and their passwords' age
 $ p -l
+# Modify a password.
+$ p -m twitter
+# Remove a password.
+$ p -r twitter
 ```
 
 # How it works
@@ -62,8 +63,8 @@ Use it at your own risk._
 
 # Installation
 
-*p* requires: `bash`, standard \*nix utilities (e.g., `awk`), and GnuPG [1].
-Also, it needs a copy-to-clipboard utility (`xclip` for \*NIX,
+*p* requires: bash, standard \*nix utilities (e.g., awk), and GnuPG [1].
+Also, it needs a copy-to-clipboard utility (`xclip` for Linux/BSD,
 `pbcopy` for MacOS).
 
 It was tested on recent: MacOS, OpenBSD, FreeBSD, some Linux distros.
@@ -102,7 +103,7 @@ $ p
 ```
 
 If the program complains you don't have a copy-to-clipboard utility, please
-install one (`xclip` on \*NIX, `pbcopy` should already be in MacOS).
+install one (`xclip` on Linux/BSD, `pbcopy` should already be in MacOS).
 
 # Further configuration
 
