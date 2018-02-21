@@ -17,6 +17,9 @@ $ p
 $ p -a twitter
 # Copy a password to the clipboard.
 $ p twitter
+# Note: the previous command returns the first password matching the
+# substring, so the following would return the same in this case:
+$ p tw
 # List labels and their passwords' age
 $ p -l
 # Modify a password.
