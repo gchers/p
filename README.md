@@ -4,6 +4,10 @@
 Its effective code is <200 lines of bash, making it easy to
 read and maintain.
 
+<p align="center">
+<img src="https://github.com/gchers/p/blob/master/utils/demo.gif" width="500" height="380" />
+</p>
+
 Here's a quick overview of the main commands.
 ```
 # Show help
